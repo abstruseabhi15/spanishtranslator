@@ -6,3 +6,5 @@ openpyxl
 torch
 PyPDF2
 sacremoses
+python-docx
+
