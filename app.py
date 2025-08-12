@@ -3,6 +3,8 @@ import pandas as pd
 from transformers import pipeline
 import PyPDF2
 from io import BytesIO
+import docx
+from tempfile import NamedTemporaryFile
 
 # ---------------- Load Translator Model ----------------
 @st.cache_resource
@@ -54,9 +56,17 @@ if st.button("Translate Canvas Text"):
         english_result = translate_text(spanish_text)
         st.subheader("English Translation:")
         st.text_area("Result", english_result, height=150)
-        st.download_button("Download Translation",
+        st.download_button("Download Translation (TXT)",
                            english_result.encode("utf-8"),
                            file_name="translated_canvas.txt")
+        # Download as Word
+        doc = docx.Document()
+        for para in english_result.split('\n\n'):
+            doc.add_paragraph(para)
+        with NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+            doc.save(tmp.name)
+            tmp.seek(0)
+            st.download_button("Download Translation (Word)", tmp.read(), file_name="translated_canvas.docx")
     else:
         st.warning("Please enter some Spanish text to translate.")
 
@@ -73,9 +83,18 @@ if uploaded_file:
         translated_text = translate_text(text)
         st.subheader("Translated (English):")
         st.text_area("Result", translated_text, height=100)
-        st.download_button("Download Translated File",
+        # Download as TXT (same as upload)
+        st.download_button("Download Translated File (TXT)",
                            translated_text.encode("utf-8"),
                            file_name="translated.txt")
+        # Download as Word (universal)
+        doc = docx.Document()
+        for para in translated_text.split('\n\n'):
+            doc.add_paragraph(para)
+        with NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+            doc.save(tmp.name)
+            tmp.seek(0)
+            st.download_button("Download Translated File (Word)", tmp.read(), file_name="translated.docx")
 
     elif uploaded_file.type == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
         # Handle Excel files
@@ -87,11 +106,19 @@ if uploaded_file:
         st.subheader("Translated Excel (First 5 Rows):")
         st.dataframe(df_translated.head())
 
-        # Save translated Excel
+        # Save translated Excel (same as upload)
         output_filename = "translated.xlsx"
         df_translated.to_excel(output_filename, index=False)
         with open(output_filename, "rb") as f:
-            st.download_button("Download Translated Excel", f, file_name=output_filename)
+            st.download_button("Download Translated Excel (XLSX)", f, file_name=output_filename)
+        # Download as Word (universal)
+        doc = docx.Document()
+        for row in df_translated.itertuples(index=False):
+            doc.add_paragraph("\t".join([str(cell) for cell in row]))
+        with NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+            doc.save(tmp.name)
+            tmp.seek(0)
+            st.download_button("Download Translated Excel (Word)", tmp.read(), file_name="translated.xlsx.docx")
 
     elif uploaded_file.type == "application/pdf":
         # Handle PDF files
@@ -109,7 +136,16 @@ if uploaded_file:
         translated_text = translate_text(text)
         st.subheader("Translated (English):")
         st.text_area("Result", translated_text, height=150)
-        st.download_button("Download Translated PDF Text",
+        # Download as TXT (since PDF creation is not supported here)
+        st.download_button("Download Translated PDF (TXT)",
                            translated_text.encode("utf-8"),
                            file_name="translated_pdf.txt")
+        # Download as Word (universal)
+        doc = docx.Document()
+        for para in translated_text.split('\n\n'):
+            doc.add_paragraph(para)
+        with NamedTemporaryFile(delete=False, suffix=".docx") as tmp:
+            doc.save(tmp.name)
+            tmp.seek(0)
+            st.download_button("Download Translated PDF (Word)", tmp.read(), file_name="translated_pdf.docx")
         
