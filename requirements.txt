@@ -1,0 +1,8 @@
+streamlit
+transformers
+sentencepiece
+pandas
+openpyxl
+torch
+PyPDF2
+sacremoses
